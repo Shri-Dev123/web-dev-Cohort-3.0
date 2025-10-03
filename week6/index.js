@@ -1,5 +1,6 @@
 const express = require('express');
 const jwt = require('jsonwebtoken');
+const JWT_SECRET = 'HelloBuddy';
 
 const app = express();
 app.use(express.json());
@@ -13,6 +14,10 @@ app.post('/signup', (req, res) => {
   users.push({
     userName,
     password,
+  });
+
+  res.json({
+    message: 'you have successfully signed up',
   });
 });
 
@@ -37,4 +42,24 @@ app.post('/signin', (req, res) => {
       message: 'the User not found',
     });
   }
+});
+
+app.get('/me', (req, res) => {
+  const token = req.header.token;
+  const foundUser = users.find((user) => user.token === token);
+
+  if (foundUser) {
+    res.json({
+      userName: foundUser.userName,
+      password: foundUser.password,
+    });
+  } else {
+    res.json({
+      message: 'The user not found',
+    });
+  }
+});
+
+app.listen(4545, () => {
+  console.log('app is running on prot 4545');
 });
