@@ -5,6 +5,22 @@ const JWT_SECRET = 'HelloBuddy';
 const app = express();
 app.use(express.json());
 
+const auth = (req, res, next) => {
+  const token = req.headers.token;
+  const docodedData = jwt.verify(token, JWT_SECRET);
+  const foundUser = users.find(
+    (user) => user.userName === docodedData.userName
+  );
+  if (typeof foundUser === 'object') {
+    req.currentUser = foundUser;
+    next();
+  } else {
+    res.json({
+      message: 'user not signedIn',
+    });
+  }
+};
+
 let users = [];
 
 app.post('/signup', (req, res) => {
@@ -44,10 +60,8 @@ app.post('/signin', (req, res) => {
   }
 });
 
-app.get('/me', (req, res) => {
-  const token = req.headers.token;
-  const foundUser = users.find((user) => user.token === token);
-
+app.get('/me', auth, (req, res) => {
+  const foundUser = req.currentUser;
   if (foundUser) {
     res.json({
       userName: foundUser.userName,
@@ -60,6 +74,6 @@ app.get('/me', (req, res) => {
   }
 });
 
-app.listen(4545, () => {
-  console.log('app is running on prot 4545');
+app.listen(4546, () => {
+  console.log('app is running on prot 4546');
 });
