@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+  <title>auth page</title>
+</head>
+
+<script>
+  const signUp = async () => {
+    const userName = document.getElementById("signup-username").value
+    const password = document.getElementById("signup-password").value
+
+    await axios.post("http://localhost:4546/signup", {
+      userName,
+      password
+    })
+    alert("signup successfully")
+
+  }
+
+  const signIn = async () => {
+    const userName = document.getElementById("signin-username").value
+    const password = document.getElementById("signin-password").value
+
+    const response = await axios.post("http://localhost:4546/signin", {
+      userName,
+      password
+    })
+
+    localStorage.setItem("token", response.data.token)
+    response.status === 200 ? alert("signed in successfully") : alert("user not found")
+    const token = localStorage.getItem("token")
+    if (token) {
+      getInfo()
+    }
+  }
+  let loggedInUserName = "";
+  let loggedInUserPassword = "";
+  const getInfo = async () => {
+    const token = localStorage.getItem("token")
+    const getUserDetails = await axios.get('http://localhost:4546/me', {
+      headers: {
+        token: `${token}`
+      }
+    });
+
+    loggedInUserName = await getUserDetails?.data?.userName
+    loggedInUserPassword = await getUserDetails?.data?.password
+    document.getElementById("name").innerHTML = loggedInUserName
+    document.getElementById("password").innerHTML = loggedInUserPassword
+  }
+</script>
+
+<body>
+
+  <div>
+    Signup
+    <input id="signup-username" placeholder="username" type="text" />
+    <input id="signup-password" placeholder="password" type="password" />
+    <button onclick="signUp()">Submit</button>
+  </div>
+
+
+  <div>
+    Signin
+    <input id="signin-username" placeholder="username" type="text" />
+    <input id="signin-password" placeholder="password" type="password" />
+    <button onclick="signIn()">Submit</button>
+  </div>
+  <div>
+    User Info
+    <span id="name"></span>
+    <span id="password"></span>
+  </div>
+
+
+</body>
+
+</html>
