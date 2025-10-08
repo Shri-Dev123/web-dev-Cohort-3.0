@@ -6,6 +6,7 @@ const app = express();
 app.use(express.json());
 
 let users = [];
+let todos = [];
 
 const auth = (req, res, next) => {
   const token = req.headers.token;
@@ -44,6 +45,7 @@ app.post('/signup', (req, res) => {
 app.post('/signin', (req, res) => {
   const userName = req.body.userName;
   const password = req.body.password;
+
   let foundUser = null;
 
   foundUser = users.find(
@@ -72,6 +74,29 @@ app.get('/me', auth, (req, res) => {
   } else {
     res.json({
       message: 'The user not found',
+    });
+  }
+});
+
+app.post('/createTodo', (req, res) => {
+  const todo = req.body;
+  if (todo) {
+    todos.push(todo);
+    res.json({
+      todo,
+      message: 'todo created sucessfully',
+    });
+  }
+});
+
+app.get('/getTodos', (req, res) => {
+  if (todos.length > 0) {
+    res.json({
+      todos,
+    });
+  } else {
+    res.json({
+      message: "todo's not found",
     });
   }
 });

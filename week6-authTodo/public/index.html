@@ -116,27 +116,27 @@
     updateUI();
   };
 
-  const renderTodos = () => {
+  const renderTodos = async () => {
     const container = showTodo();
     container.innerHTML = '';
 
-    const userTodos = todos[loggedInUserName] || [];
+    const userTodos = await axios.get("http://localhost:4546/getTodos")
+    console.log(userTodos, "todos")
 
-    userTodos.forEach((todo) => {
+    userTodos?.data?.todos?.forEach((todo) => {
       const div = document.createElement('div');
       div.innerHTML = `
-      <span>${todo.text}</span>
-      <button onclick="deleteTodo(${todo.id})">Delete</button>
-      <button onclick="editTodo(${todo.id})">Edit</button>
+      <span>${todo?.todoItem?.text}</span>
+      <button onclick="deleteTodo(${todo?.todoItem?.id})">Delete</button>
+      <button onclick="editTodo(${todo?.todoItem?.id})">Edit</button>
     `;
       container.appendChild(div);
     });
 
-    console.log(todos, "todos")
   };
 
 
-  const createTodo = () => {
+  const createTodo = async () => {
     const todo = todoText().value.trim();
     if (!todo) return;
 
@@ -148,10 +148,18 @@
       id: Date.now(),
       text: todo,
     };
+    try {
+      const response = await axios.post("http://localhost:4546/createTodo", {
+        todoItem
+      });
+      todoText().value = '';
+      renderTodos();
+      alert("todo created successfully");
 
-    todos[loggedInUserName].push(todoItem);
-    todoText().value = '';
-    renderTodos();
+    } catch (err) {
+      alert("failed to create todo");
+    }
+
   };
 
   const editTodo = (id) => {
