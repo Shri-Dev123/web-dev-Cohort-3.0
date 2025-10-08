@@ -18,7 +18,7 @@
 <script>
   let loggedInUserName = "";
   let loggedInUserPassword = "";
-  let todos = {}
+  let todos = []
   const signupDiv = () => document.getElementById("signup-div");
   const signinDiv = () => document.getElementById("signin-div");
   const userInfoDiv = () => document.getElementById("user-info");
@@ -121,6 +121,7 @@
     container.innerHTML = '';
 
     const userTodos = await axios.get("http://localhost:4546/getTodos")
+    todos.push(userTodos?.data?.todos)
     console.log(userTodos, "todos")
 
     userTodos?.data?.todos?.forEach((todo) => {
@@ -163,7 +164,7 @@
   };
 
   const editTodo = (id) => {
-    const userTodos = todos[loggedInUserName];
+    const userTodos = todos;
     const todo = userTodos.find(t => t.id === id);
     const newText = prompt("Edit your todo:", todo.text);
     if (newText !== null && newText.trim() !== "") {
