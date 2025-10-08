@@ -2,215 +2,228 @@
 <html lang="en">
 
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
-  <title>auth page</title>
+  <title>Todo App with Auth</title>
   <style>
     #user-info,
-    #logout-btn {
+    #logout-btn,
+    #todo,
+    #show-todos {
       display: none;
     }
   </style>
-
 </head>
 
-<script>
-  let loggedInUserName = "";
-  let loggedInUserPassword = "";
-  let todos = []
-  const signupDiv = () => document.getElementById("signup-div");
-  const signinDiv = () => document.getElementById("signin-div");
-  const userInfoDiv = () => document.getElementById("user-info");
-  const logOutButton = () => document.getElementById("logout-btn");
-  const todoCreate = () => document.getElementById("todo");
-  const showTodo = () => document.getElementById("show-todos")
-  const todoText = () => document.getElementById("todo-text")
-
-
-
-  const updateUI = () => {
-    const token = localStorage.getItem("token");
-    if (token) {
-      signinDiv().style.display = 'none';
-      signupDiv().style.display = 'none';
-      todoCreate().style.display = 'block';
-      showTodo().style.display = 'block'
-      userInfoDiv().style.display = 'block';
-      logOutButton().style.display = 'block';
-    } else {
-      signinDiv().style.display = 'block';
-      signupDiv().style.display = 'block';
-      todoCreate().style.display = 'none';
-      showTodo().style.display = 'none';
-      userInfoDiv().style.display = 'none';
-      logOutButton().style.display = 'none';
-    }
-  };
-
-  document.addEventListener('DOMContentLoaded', () => {
-    updateUI();
-    const token = localStorage.getItem("token");
-    if (token) getInfo();
-  });
-
-  const signUp = async () => {
-    const userName = document.getElementById("signup-username").value;
-    const password = document.getElementById("signup-password").value;
-
-    try {
-      await axios.post("http://localhost:4546/signup", {
-        userName,
-        password
-      });
-      alert("Signed up successfully. Please sign in.");
-      updateUI();
-    } catch (err) {
-      alert("Signup failed.");
-    }
-  };
-
-  const signIn = async () => {
-    const userName = document.getElementById("signin-username").value;
-    const password = document.getElementById("signin-password").value;
-
-    try {
-      const response = await axios.post("http://localhost:4546/signin", {
-        userName,
-        password
-      });
-
-      localStorage.setItem("token", response.data.token);
-      alert("Signed in successfully");
-      updateUI();
-      getInfo();
-    } catch (err) {
-      alert("User not found or wrong credentials");
-    }
-  };
-
-  const getInfo = async () => {
-    const token = localStorage.getItem("token");
-    if (!token) return;
-
-    try {
-      const response = await axios.get('http://localhost:4546/me', {
-        headers: {
-          token
-        }
-      });
-
-      loggedInUserName = response.data?.userName || "";
-      loggedInUserPassword = response.data?.password || "";
-
-      document.getElementById("name").innerText = loggedInUserName;
-      document.getElementById("password").innerText = loggedInUserPassword;
-      renderTodos();
-    } catch (err) {
-      alert("Failed to fetch user info.");
-    }
-  };
-
-  const logOut = () => {
-    localStorage.removeItem("token");
-    updateUI();
-  };
-
-  const renderTodos = async () => {
-    const container = showTodo();
-    container.innerHTML = '';
-
-    const userTodos = await axios.get("http://localhost:4546/getTodos")
-    todos.push(userTodos?.data?.todos)
-    console.log(userTodos, "todos")
-
-    userTodos?.data?.todos?.forEach((todo) => {
-      const div = document.createElement('div');
-      div.innerHTML = `
-      <span>${todo?.todoItem?.text}</span>
-      <button onclick="deleteTodo(${todo?.todoItem?.id})">Delete</button>
-      <button onclick="editTodo(${todo?.todoItem?.id})">Edit</button>
-    `;
-      container.appendChild(div);
-    });
-
-  };
-
-
-  const createTodo = async () => {
-    const todo = todoText().value.trim();
-    if (!todo) return;
-
-    if (!todos[loggedInUserName]) {
-      todos[loggedInUserName] = [];
-    }
-
-    const todoItem = {
-      id: Date.now(),
-      text: todo,
-    };
-    try {
-      const response = await axios.post("http://localhost:4546/createTodo", {
-        todoItem
-      });
-      todoText().value = '';
-      renderTodos();
-      alert("todo created successfully");
-
-    } catch (err) {
-      alert("failed to create todo");
-    }
-
-  };
-
-  const editTodo = (id) => {
-    const userTodos = todos;
-    const todo = userTodos.find(t => t.id === id);
-    const newText = prompt("Edit your todo:", todo.text);
-    if (newText !== null && newText.trim() !== "") {
-      todo.text = newText.trim();
-      renderTodos();
-    }
-  };
-
-  const deleteTodo = (id) => {
-    todos[loggedInUserName] = todos[loggedInUserName].filter(todo => todo.id !== id);
-    renderTodos();
-  };
-</script>
-
-
 <body>
-
   <div id="signup-div">
-    Signup
-    <input id="signup-username" placeholder="username" type="text" />
-    <input id="signup-password" placeholder="password" type="password" />
+    <h3>Signup</h3>
+    <input id="signup-username" placeholder="Username" type="text" />
+    <input id="signup-password" placeholder="Password" type="password" />
     <button onclick="signUp()">Submit</button>
   </div>
 
-
   <div id="signin-div">
-    Signin
-    <input id="signin-username" placeholder="username" type="text" />
-    <input id="signin-password" placeholder="password" type="password" />
+    <h3>Signin</h3>
+    <input id="signin-username" placeholder="Username" type="text" />
+    <input id="signin-password" placeholder="Password" type="password" />
     <button onclick="signIn()">Submit</button>
   </div>
+
   <div id="user-info">
-    User Info
+    <h3>User Info</h3>
     <span id="name"></span>
-    <span id="password"></span>
   </div>
 
   <button id="logout-btn" onclick="logOut()">Log out</button>
-  <div id="show-todos"></div>
-  <div id="todo">
-    <input id="todo-text" type="text" placeholder="todo" />
-    <button type="submit" onclick="createTodo()">Create</button>
 
+  <div id="todo">
+    <input id="todo-text" type="text" placeholder="New todo" />
+    <button onclick="createTodo()">Create</button>
   </div>
 
+  <div id="show-todos"></div>
 
+  <script>
+    const API = "http://localhost:4546";
+
+    const elements = {
+      signupDiv: document.getElementById("signup-div"),
+      signinDiv: document.getElementById("signin-div"),
+      userInfoDiv: document.getElementById("user-info"),
+      logoutBtn: document.getElementById("logout-btn"),
+      todoCreate: document.getElementById("todo"),
+      todoText: document.getElementById("todo-text"),
+      showTodos: document.getElementById("show-todos"),
+    };
+
+    let todos = [];
+
+    const updateUI = () => {
+      const token = localStorage.getItem("token");
+      const show = (el, display = "block") => el.style.display = display;
+      const hide = (el) => el.style.display = "none";
+
+      if (token) {
+        hide(elements.signupDiv);
+        hide(elements.signinDiv);
+        show(elements.userInfoDiv);
+        show(elements.logoutBtn);
+        show(elements.todoCreate);
+        show(elements.showTodos);
+      } else {
+        show(elements.signupDiv);
+        show(elements.signinDiv);
+        hide(elements.userInfoDiv);
+        hide(elements.logoutBtn);
+        hide(elements.todoCreate);
+        hide(elements.showTodos);
+      }
+    };
+
+    document.addEventListener("DOMContentLoaded", () => {
+      updateUI();
+      const token = localStorage.getItem("token");
+      if (token) getInfo();
+    });
+
+    const signUp = async () => {
+      const userName = document.getElementById("signup-username").value;
+      const password = document.getElementById("signup-password").value;
+
+      try {
+        await axios.post(`${API}/signup`, {
+          userName,
+          password
+        });
+        alert("Signed up successfully. Please sign in.");
+      } catch {
+        alert("Signup failed.");
+      }
+    };
+
+    const signIn = async () => {
+      const userName = document.getElementById("signin-username").value;
+      const password = document.getElementById("signin-password").value;
+
+      try {
+        const {
+          data
+        } = await axios.post(`${API}/signin`, {
+          userName,
+          password
+        });
+        localStorage.setItem("token", data.token);
+        alert("Signed in successfully");
+        updateUI();
+        getInfo();
+      } catch {
+        alert("Signin failed.");
+      }
+    };
+
+    const getInfo = async () => {
+      try {
+        const {
+          data
+        } = await axios.get(`${API}/me`, {
+          headers: {
+            token: localStorage.getItem("token")
+          },
+        });
+        document.getElementById("name").innerText = `Welcome, ${data.userName}`;
+        renderTodos();
+      } catch {
+        alert("Failed to fetch user info.");
+      }
+    };
+
+    const logOut = () => {
+      localStorage.removeItem("token");
+      updateUI();
+    };
+
+    const createTodo = async () => {
+      const text = elements.todoText.value.trim();
+      if (!text) return;
+
+      try {
+        await axios.post(`${API}/createTodo`, {
+          id: Date.now(),
+          text,
+        }, {
+          headers: {
+            token: localStorage.getItem("token")
+          }
+        });
+
+        elements.todoText.value = '';
+        renderTodos();
+      } catch {
+        alert("Failed to create todo.");
+      }
+    };
+
+    const renderTodos = async () => {
+      try {
+        const {
+          data
+        } = await axios.get(`${API}/getTodos`, {
+          headers: {
+            token: localStorage.getItem("token")
+          }
+        });
+
+        todos = data.todos;
+        elements.showTodos.innerHTML = '';
+
+        todos.forEach(todo => {
+          const div = document.createElement("div");
+          div.innerHTML = `
+            <span>${todo.text}</span>
+            <button onclick="editTodo(${todo.id})">Edit</button>
+            <button onclick="deleteTodo(${todo.id})">Delete</button>
+          `;
+          elements.showTodos.appendChild(div);
+        });
+      } catch {
+        alert("Failed to load todos.");
+      }
+    };
+
+    const editTodo = async (id) => {
+      const todo = todos.find(t => t.id === id);
+      const newText = prompt("Edit your todo:", todo.text);
+      if (!newText) return;
+
+      try {
+        await axios.patch(`${API}/todos/${id}`, {
+          text: newText.trim()
+        }, {
+          headers: {
+            token: localStorage.getItem("token")
+          }
+        });
+        renderTodos();
+      } catch {
+        alert("Failed to update todo.");
+      }
+    };
+
+    const deleteTodo = async (id) => {
+      try {
+        await axios.delete(`${API}/todos/${id}`, {
+          headers: {
+            token: localStorage.getItem("token")
+          }
+        });
+        renderTodos();
+      } catch {
+        alert("Failed to delete todo.");
+      }
+    };
+  </script>
 </body>
 
 </html>
